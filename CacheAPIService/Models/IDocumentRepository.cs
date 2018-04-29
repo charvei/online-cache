@@ -8,8 +8,8 @@ namespace CacheAPIService.Models
 {
     public interface IDocumentRepository
     {
-        Document Get(int id);
-        Document Add(Document item);
+        Document Get(int id, int timeToLive);
+        Document Add(Document item, int timeToLive);
         Document Remove(Document item);
         void ClearCache();
     }

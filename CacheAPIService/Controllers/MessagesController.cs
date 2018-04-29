@@ -4,7 +4,9 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
-using CacheAPIService.Models;   //say that we're using Models
+using System.Net.Cache;
+using System.Text.RegularExpressions;
+using CacheAPIService.Models;
 
 
 namespace CacheAPIService.Controllers
@@ -26,8 +28,16 @@ namespace CacheAPIService.Controllers
         /*api/document/id*/
         public HttpResponseMessage GetDocument(int id)
         {
-            //Probably good to use HttpResponseMessage as the return type and follow the below example
-            Document item = repository.Get(id);
+            int timeToLive = 30;
+            System.Net.Http.Headers.HttpRequestHeaders headers = Request.Headers;
+            //Search for custom header in HttpRequestHeaders to specify TTL (assumes header is of format: "Custom-Ttl:[digits]")
+            if (headers.Contains("Custom-Ttl"))
+            {
+                String customTtl = headers.GetValues("Custom-Ttl").First();
+                timeToLive = Convert.ToInt32(customTtl);
+            }
+
+            Document item = repository.Get(id, timeToLive);
             HttpResponseMessage response;
             if (item == null)
             {
@@ -43,7 +53,17 @@ namespace CacheAPIService.Controllers
         public HttpResponseMessage PostDocument(Document item)
         {
             HttpResponseMessage response;
-            item = repository.Add(item);
+            int timeToLive = 30;
+            System.Net.Http.Headers.HttpRequestHeaders headers = Request.Headers;
+
+            //Search for custom header in HttpRequestHeaders to specify TTL (assumes header is of format: "Custom-Ttl:[digits]")
+            if (headers.Contains("Custom-Ttl"))
+            {
+                String customTtl = headers.GetValues("Custom-Ttl").First();
+                timeToLive = Convert.ToInt32(customTtl);
+            }
+
+            item = repository.Add(item, timeToLive);
             if (item != null)
             {
                 response = Request.CreateResponse<Document>(HttpStatusCode.Created, item);

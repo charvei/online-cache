@@ -12,7 +12,6 @@ namespace CacheAPIService.Models
         private static Dictionary<int, String> Documents = new Dictionary<int, String>();
         private static readonly Timer Timer = new Timer(OnTimerElapsed);
         private static Dictionary<int, System.DateTime> DeleteSchedule = new Dictionary<int, System.DateTime>();
-        private int TTL = 30;
 
         /*Constructor*/
         public DocumentRepository()
@@ -64,36 +63,35 @@ namespace CacheAPIService.Models
             return Id;
         }
 
-        public Document Get(int Id)
+        public Document Get(int id, int timeToLive)
         {
-            String Message = "";
-            Document Item = new Document();
-            if (Documents.TryGetValue(Id, out Message))
+            String message = "";
+            Document item = new Document();
+            if (Documents.TryGetValue(id, out message))
             {
-                //Document Item = new Document();
-                Item.ID = Id;
-                Item.Message = Message;
-                System.Diagnostics.Debug.WriteLine("Item id: " + Item.ID + " retrieved.");
-                ScheduleDeletionTime(Item.ID, TTL);
-                return Item;
+                item.ID = id;
+                item.Message = message;
+                //System.Diagnostics.Debug.WriteLine("Item id: " + Item.ID + " retrieved.");
+                ScheduleDeletionTime(item.ID, timeToLive);
+                return item;
             } else
             {
                 //throw error -- probably not great
                 //throw new ArgumentException("Id of document to be retrieved was not found", "Id");
-                Item = null;
+                item = null;
             }
-            return Item;
+            return item;
         }
 
         /*Add a document to documents dictionary*/
-        public Document Add(Document Item)
+        public Document Add(Document Item, int timeToLive)
         {
             //Add with throw exception if id already exists, maybe worth try catching here?
-            System.Diagnostics.Debug.WriteLine("Item id: " + Item.ID + " added.");
+            //System.Diagnostics.Debug.WriteLine("Item id: " + Item.ID + " added.");
             try
             {
                 Documents.Add(Item.ID, Item.Message);
-                ScheduleDeletionTime(Item.ID, TTL);
+                ScheduleDeletionTime(Item.ID, timeToLive);
             } catch (ArgumentException)
             {
                 Item = null;
