@@ -12,12 +12,11 @@ namespace CacheAPIService.Models
         private static Dictionary<int, String> Documents = new Dictionary<int, String>();
         private static readonly Timer Timer = new Timer(OnTimerElapsed);
         private static Dictionary<int, System.DateTime> DeleteSchedule = new Dictionary<int, System.DateTime>();
-        private int TTL = 10;
+        private int TTL = 30;
 
         /*Constructor*/
         public DocumentRepository()
         {
-            //System.Diagnostics.Debug.WriteLine("TEST TEST TEST TEST TEST TEST");
             Start();
         }
 
@@ -68,9 +67,10 @@ namespace CacheAPIService.Models
         public Document Get(int Id)
         {
             String Message = "";
+            Document Item = new Document();
             if (Documents.TryGetValue(Id, out Message))
             {
-                Document Item = new Document();
+                //Document Item = new Document();
                 Item.ID = Id;
                 Item.Message = Message;
                 System.Diagnostics.Debug.WriteLine("Item id: " + Item.ID + " retrieved.");
@@ -79,8 +79,10 @@ namespace CacheAPIService.Models
             } else
             {
                 //throw error -- probably not great
-                throw new ArgumentException("Id of document to be retrieved was not found", "Id");
+                //throw new ArgumentException("Id of document to be retrieved was not found", "Id");
+                Item = null;
             }
+            return Item;
         }
 
         /*Add a document to documents dictionary*/
@@ -88,8 +90,14 @@ namespace CacheAPIService.Models
         {
             //Add with throw exception if id already exists, maybe worth try catching here?
             System.Diagnostics.Debug.WriteLine("Item id: " + Item.ID + " added.");
-            Documents.Add(Item.ID, Item.Message);
-            ScheduleDeletionTime(Item.ID, TTL);
+            try
+            {
+                Documents.Add(Item.ID, Item.Message);
+                ScheduleDeletionTime(Item.ID, TTL);
+            } catch (ArgumentException)
+            {
+                Item = null;
+            }
             return Item;
         }
 
