@@ -6,11 +6,14 @@ using System.Threading.Tasks;
 
 namespace CacheAPIService.Models
 {
+    /**
+     * Interface for DocumentRepository class to implement. 
+     */
     public interface IDocumentRepository
     {
-        Document Get(int id, int timeToLive);
-        Document Add(Document item, int timeToLive);
-        Document Remove(Document item);
+        Document Get(int id);
+        Document Add(Document item);
+        int ScheduleDeletionTime(int Id, int TimeToLive);
         void ClearCache();
     }
 }

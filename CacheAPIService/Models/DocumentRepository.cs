@@ -6,126 +6,162 @@ using System.Threading;
 
 namespace CacheAPIService.Models
 {
+    /**
+     * Repository for implementing business logic of cache such as storage and handling of Documents.
+     */ 
     public class DocumentRepository: IDocumentRepository
     {
         //Dictionary good because only retrieving one at a time and a unique identifier is used
-        private static Dictionary<int, String> Documents = new Dictionary<int, String>();
-        private static readonly Timer Timer = new Timer(OnTimerElapsed);
-        private static Dictionary<int, System.DateTime> DeleteSchedule = new Dictionary<int, System.DateTime>();
+        private static Dictionary<int, String> documents = new Dictionary<int, String>();
+        private static readonly Timer timer = new Timer(OnTimerElapsed);
+        private static Dictionary<int, System.DateTime> deleteSchedule = new Dictionary<int, System.DateTime>();
 
-        /*Constructor*/
+        /**
+         * Constructor for DocumentRepository
+         */
         public DocumentRepository()
         {
-            Start();
+            StartTimer();
         }
 
-        public static void Start()
+        /**
+         * Timer initialisation
+         */
+        private static void StartTimer()
         {
-            //look into what each of the arguments mean
-            Timer.Change(TimeSpan.Zero, TimeSpan.FromSeconds(1));
+            timer.Change(TimeSpan.Zero, TimeSpan.FromSeconds(1));
         }
 
-        /*I believe the state object is the object keeping track of the state of the program for the timer. without specifying an
-         additional state object, the object state is the timer itself.*/
+        /**
+         * Callback function for timer (this function is invoked at every time interval as specified in Timer.Change()).
+         * Determines if any Documents have existed past their Time To Live, and if so removes them from the cache.
+         * 
+         * Args:
+         *  object state
+         *      - object keeping track of the state of the program for the timer. without specifying an additional state object,
+         *        the object state is the timer itself.         
+         */
         private static void OnTimerElapsed(object state)
         {
-            System.Diagnostics.Debug.WriteLine(DateTime.Now);
             /*Can't modify a collection while its being enumerated in a foreach loop
              i.e. you can't change the dictionary you're looping over while also looping through it, so make a list of dictionary,
              loop through the list which can change the dictionary itself*/
-            foreach (KeyValuePair<int, DateTime> ScheduledDeletion in DeleteSchedule.ToArray())
+            System.Diagnostics.Debug.WriteLine(DateTime.Now);
+            foreach (KeyValuePair<int, DateTime> scheduledDeletion in deleteSchedule.ToArray())
             {
-                System.Diagnostics.Debug.WriteLine(ScheduledDeletion.Key + ", @ " + DeleteSchedule[ScheduledDeletion.Key]);
-                if (DeleteSchedule[ScheduledDeletion.Key] <= DateTime.Now)
+                if (deleteSchedule[scheduledDeletion.Key] <= DateTime.Now)
                 {
                     System.Diagnostics.Debug.WriteLine("DELETED");
-                    Documents.Remove(ScheduledDeletion.Key);
-                    DeleteSchedule.Remove(ScheduledDeletion.Key);
+                    documents.Remove(scheduledDeletion.Key);
+                    deleteSchedule.Remove(scheduledDeletion.Key);
                 }
             }
         }
 
-        /*Add the document Id to DeleteSchedule with the DateTime of when to delete*/
-        private int ScheduleDeletionTime(int Id, int TimeToLive)
+        /**
+         * Adds Id, DateTime key-value pair to the delete schedule dictionary to specify the time in which
+         * a document's Time To Live has been exceeded.
+         * 
+         * Args:
+         *  int Id
+         *      - Id of Document
+         *  int TimeToLive
+         *      - Time to Live of Document
+         *      
+         */
+        public int ScheduleDeletionTime(int id, int timeToLive)
         {
-            DateTime DeleteTime = (DateTime.Now).AddSeconds(TimeToLive);
-            //If it exists update, if it doesn't Add.
-            if (DeleteSchedule.ContainsKey(Id))
+            DateTime deleteTime = (DateTime.Now).AddSeconds(timeToLive);
+            if (deleteSchedule.ContainsKey(id))
             {
-                //Document is currently stored in the cache -- renew it's TTL
-                DeleteSchedule[Id] = DeleteTime;
-            } else
-            {
-                //Document is not currently in the cache -- add to cache
-                DeleteSchedule.Add(Id, DeleteTime);
+                deleteSchedule[id] = deleteTime;
             }
-            
-            return Id;
+            else
+            {
+                deleteSchedule.Add(id, deleteTime);
+            }
+            return id;
         }
-
-        public Document Get(int id, int timeToLive)
+        
+        /**
+         * If Document is stored in cache, return a copy of the Document corresponding to the provided id. If no Document
+         * found in cache's store of documents, return null.
+         * 
+         * Args:
+         *  int id
+         *      - id of document to retrieve from document store
+         * 
+         * Returns:
+         *  Document item
+         *      - Copy of Document stored in cache
+         */
+        public Document Get(int id)
         {
             String message = "";
             Document item = new Document();
-            if (Documents.TryGetValue(id, out message))
+            if (documents.TryGetValue(id, out message))
             {
                 item.ID = id;
                 item.Message = message;
-                //System.Diagnostics.Debug.WriteLine("Item id: " + Item.ID + " retrieved.");
-                ScheduleDeletionTime(item.ID, timeToLive);
                 return item;
             } else
             {
-                //throw error -- probably not great
-                //throw new ArgumentException("Id of document to be retrieved was not found", "Id");
                 item = null;
             }
             return item;
         }
 
-        /*Add a document to documents dictionary*/
-        public Document Add(Document Item, int timeToLive)
+        /**
+         * Add a document to the store of documents. Returns document added if successful. Returns null
+         * value if provided item was not able to be added.
+         * 
+         * Args:
+         *  Document item
+         * 
+         * Returns:
+         *  Document item
+         *      - the Document added to cache's document store.
+         */
+        public Document Add(Document item)
         {
-            //Add with throw exception if id already exists, maybe worth try catching here?
-            //System.Diagnostics.Debug.WriteLine("Item id: " + Item.ID + " added.");
             try
             {
-                Documents.Add(Item.ID, Item.Message);
-                ScheduleDeletionTime(Item.ID, timeToLive);
+                documents.Add(item.ID, item.Message);
             } catch (ArgumentException)
             {
-                Item = null;
-            }
-            return Item;
-        }
-
-        /*Some kind of timer that gets the current time item is added, sets timer to 30 seconds, and waits until it expires
-         and deletes it, OR, waits til it is geted, and then renew to 30 seconds*/
-
-
-        /*for adjustable TTL: have it read the header for 'expires' or something*/
-
-        /*Maybe change this to just the ID?*/
-        public Document Remove(Document item)
-        {
-            if (!(Documents.Remove(item.ID)))
-            {
-                //item failed to be removed
-                throw new ArgumentException("Id of document to be removed was not found", "item.ID");
+                item = null;
             }
             return item;
         }
 
-        public int RemoveById(int Id)
+        /**
+         * Delete a Document from the store of documents. Throws ArgumentException if the provided Document was not able
+         * to be deleted.
+         * 
+         * Args:
+         *  Document item
+         *      The item wanted to be removed
+         * 
+         * Returns:
+         *  Document item
+         *      The removed item
+         */
+        private Document Remove(Document item)
         {
-            Documents.Remove(Id);
-            return Id;
+            if (!(documents.Remove(item.ID)))
+            {
+                throw new ArgumentException("Document provided in argument was not able to be removed");
+            }
+            return item;
         }
 
-        /*Is creating a new instance better than wiping it all?*/
+        /**
+         * Set document store and delete schedule to new empty dictionaries respectively.
+         */
         public void ClearCache()
         {
-            Documents = new Dictionary<int, string>();
+            documents = new Dictionary<int, String>();
+            deleteSchedule = new Dictionary<int, System.DateTime>();
         }
     }
 }

@@ -5,6 +5,9 @@ using System.Web;
 
 namespace CacheAPIService.Models
 {
+    /**
+     * Domain class for documents.
+     */
     public class Document
     {
         public int ID { get; set; }
