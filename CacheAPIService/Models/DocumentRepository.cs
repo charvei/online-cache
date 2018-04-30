@@ -33,13 +33,13 @@ namespace CacheAPIService.Models
         }
 
         /**
-         * Callback function for timer (this function is invoked at every time interval as specified in Timer.Change()).
-         * Determines if any Documents have existed past their Time To Live, and if so removes them from the cache.
+         * Callback function for timer (this function is invoked at every time interval as 
+         * specified in Timer.Change()). Determines if any Documents have existed past their 
+         * Time To Live, and if so removes them from the cache.
          * 
          * Args:
          *  object state
-         *      - object keeping track of the state of the program for the timer. without specifying an additional state object,
-         *        the object state is the timer itself.         
+         *      - object keeping track of the state of the program for the timer. 
          */
         private static void OnTimerElapsed(object state)
         {
@@ -54,8 +54,8 @@ namespace CacheAPIService.Models
         }
 
         /**
-         * Adds Id, DateTime key-value pair to the delete schedule dictionary to specify the time in which
-         * a document's Time To Live has been exceeded.
+         * Adds Id, DateTime key-value pair to the delete schedule dictionary to specify the 
+         * time in which a document's Time To Live has been exceeded.
          * 
          * Args:
          *  int Id
@@ -79,8 +79,8 @@ namespace CacheAPIService.Models
         }
         
         /**
-         * If Document is stored in cache, return a copy of the Document corresponding to the provided id. If no Document
-         * found in cache's store of documents, return null.
+         * If Document is stored in cache, return a copy of the Document corresponding to the 
+         * provided id. If no Document found in cache's store of documents, return null.
          * 
          * Args:
          *  int id
