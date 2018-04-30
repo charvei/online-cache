@@ -13,14 +13,15 @@ namespace CacheAPIService.Controllers
 {
     /**
      * Controller for handling Http requests and connecting with model / business logic
-     */ 
+     */
     public class MessagesController : ApiController
     {
         static readonly IDocumentRepository repository = new DocumentRepository();
 
         /**
-         * Function to be called on Http GET request (api/messages/[id]). Attempts to retrieve a document from the repository
-         * with id corresponding to id parameter. If document can be succesfully retrieved, the document is returned to client
+         * Function to be called on Http GET request (api/messages/[id]). Attempts to retrieve a
+         * document from the repository with id corresponding to id parameter. If document can be
+         * succesfully retrieved, the document is returned to client
          * with 'OK' response code. Otherwise a resource not found message (status code: 404) is sent.
          * 
          * Args: 
@@ -37,7 +38,8 @@ namespace CacheAPIService.Controllers
             if (item == null)
             {
                 response = Request.CreateResponse<String>(HttpStatusCode.NotFound, "Resource not found");
-            } else
+            }
+            else
             {
                 repository.ScheduleDeletionTime(item.ID, GetTimeToLive());
                 response = Request.CreateResponse<Document>(HttpStatusCode.OK, item);
@@ -46,9 +48,10 @@ namespace CacheAPIService.Controllers
         }
 
         /**
-         * Function to be called on Http POST request (api/messages). Attempts to add document to repository. If successfully created,
-         * an Http Created message (status code: 201) with a copy of the created document and, in the response header, the location of
-         * newly created file is returned to client. If 
+         * Function to be called on Http POST request (api/messages). Attempts to add document 
+         * to repository. If successfully created, an Http Created message (status code: 201) 
+         * with a copy of the created document and, in the response header, the location of newly 
+         * created file is returned to client.
          * 
          * Args: 
          *  Document item
@@ -64,21 +67,22 @@ namespace CacheAPIService.Controllers
             if (item != null)
             {
                 response = Request.CreateResponse<Document>(HttpStatusCode.Created, item);
-                string uri = Url.Link("DefaultApi", new { id = item.ID }); 
+                string uri = Url.Link("DefaultApi", new { id = item.ID });
                 response.Headers.Location = new Uri(uri);
                 repository.ScheduleDeletionTime(item.ID, GetTimeToLive());
-            } else
+            }
+            else
             {
-                response = Request.CreateResponse<String>(HttpStatusCode.BadRequest, 
+                response = Request.CreateResponse<String>(HttpStatusCode.BadRequest,
                         "Bad Request: specified document was not able to be created.");
             }
             return response;
         }
 
         /**
-         * Function to be called on Http DELETE request (api/messages). Calls on repository function to clear cache. Returns Http
-         * OK response (status code: 200) if successful. In case of an error occuring during this process, returns Http Internal 
-         * Server Error response (status code 500).
+         * Function to be called on Http DELETE request (api/messages). Calls on repository function to 
+         * clear cache. Returns Http OK response (status code: 200) if successful. In case of an error 
+         * occuring during this process, returns Http Internal Server Error response (status code 500).
          * 
          * Returns:
          *  HttpResponseMessage
@@ -90,15 +94,17 @@ namespace CacheAPIService.Controllers
                 repository.ClearCache();
                 var response = Request.CreateResponse<String>(HttpStatusCode.OK, "OK: Cache cleared.");
                 return response;
-            } catch
+            }
+            catch
             {
                 throw new HttpResponseException(HttpStatusCode.InternalServerError);
             }
         }
 
         /**
-         * Helper function. Returns Time To Live value for a document according to either the value in seconds corresponding to
-         * custom header "Custom-Ttl" or, if no such header exists, a default value of 30 seconds.
+         * Helper function. Returns Time To Live value for a document according to either the value 
+         * in seconds corresponding to custom header "Custom-Ttl" or, if no such header exists, a 
+         * default value of 30 seconds.
          * 
          * returns: 
          *  int

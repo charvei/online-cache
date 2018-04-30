@@ -8,8 +8,8 @@ namespace CacheAPIService.Models
 {
     /**
      * Repository for implementing business logic of cache such as storage and handling of Documents.
-     */ 
-    public class DocumentRepository: IDocumentRepository
+     */
+    public class DocumentRepository : IDocumentRepository
     {
         private static Dictionary<int, String> documents = new Dictionary<int, String>();
         private static readonly Timer timer = new Timer(OnTimerElapsed);
@@ -77,7 +77,7 @@ namespace CacheAPIService.Models
             }
             return id;
         }
-        
+
         /**
          * If Document is stored in cache, return a copy of the Document corresponding to the 
          * provided id. If no Document found in cache's store of documents, return null.
@@ -99,7 +99,8 @@ namespace CacheAPIService.Models
                 item.ID = id;
                 item.Message = message;
                 return item;
-            } else
+            }
+            else
             {
                 item = null;
             }
@@ -122,7 +123,8 @@ namespace CacheAPIService.Models
             try
             {
                 documents.Add(item.ID, item.Message);
-            } catch (ArgumentException)
+            }
+            catch (ArgumentException)
             {
                 item = null;
             }
