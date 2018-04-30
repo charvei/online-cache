@@ -16,16 +16,7 @@ namespace CacheAPIService.Controllers
      */ 
     public class MessagesController : ApiController
     {
-        //Why static?
-        //Why readonly?
-        static readonly IDocumentRepository repository = new DocumentRepository(); //hold an instance of movie repository
-        /*
-         * In this controller we will use this instance of the repository to implement the business logic
-           rather than directly in the controller. Do it outside the controller (action methods) SLIM.
-         - Not a good idea to implement business logic in the action method
-         - Action method's responsibility is to say WHERE we implement the business logic rather than implement it itself
-         - Not good practice to do it inside controller in "large company"
-         */
+        static readonly IDocumentRepository repository = new DocumentRepository();
 
         /**
          * Function to be called on Http GET request (api/messages/[id]). Attempts to retrieve a document from the repository
@@ -41,7 +32,7 @@ namespace CacheAPIService.Controllers
          */
         public HttpResponseMessage GetDocument(int id)
         {
-            Document item = repository.Get(id);
+            Document item = repository.RetrieveDocument(id);
             HttpResponseMessage response;
             if (item == null)
             {
@@ -54,7 +45,6 @@ namespace CacheAPIService.Controllers
             return response;
         }
 
-        /*WebApi (ApiController) that this is derived from uses media formatter to serialize model in response body when using HttpResponseMessage and a model is added to it*/
         /**
          * Function to be called on Http POST request (api/messages). Attempts to add document to repository. If successfully created,
          * an Http Created message (status code: 201) with a copy of the created document and, in the response header, the location of
@@ -70,7 +60,7 @@ namespace CacheAPIService.Controllers
         public HttpResponseMessage PostDocument(Document item)
         {
             HttpResponseMessage response;
-            item = repository.Add(item);
+            item = repository.AddDocument(item);
             if (item != null)
             {
                 response = Request.CreateResponse<Document>(HttpStatusCode.Created, item);
@@ -80,8 +70,7 @@ namespace CacheAPIService.Controllers
             } else
             {
                 response = Request.CreateResponse<String>(HttpStatusCode.BadRequest, 
-                        "Bad Request: specified document was not able to be created, a document with the same id may already exist");
-                //not sure about this -- would like be more confident in the HttpStatusCode to return. Ie maybe its for another reason and not a bad request.
+                        "Bad Request: specified document was not able to be created.");
             }
             return response;
         }
@@ -103,7 +92,7 @@ namespace CacheAPIService.Controllers
                 return response;
             } catch
             {
-                throw new HttpResponseException(HttpStatusCode.InternalServerError); //generic and may not be most appropriate error
+                throw new HttpResponseException(HttpStatusCode.InternalServerError);
             }
         }
 
@@ -119,7 +108,6 @@ namespace CacheAPIService.Controllers
         {
             int TimeToLive = 30;
             System.Net.Http.Headers.HttpRequestHeaders headers = Request.Headers;
-            //Search for custom header in HttpRequestHeaders to specify TTL (assumes header is of format: "Custom-Ttl:[digits]")
             if (headers.Contains("Custom-Ttl"))
             {
                 String customTtl = headers.GetValues("Custom-Ttl").First();

@@ -11,6 +11,6 @@ namespace CacheAPIService.Models
     public class Document
     {
         public int ID { get; set; }
-        public string Message { get; set; }
+        public String Message { get; set; }
     }
 }

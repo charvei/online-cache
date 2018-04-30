@@ -11,10 +11,10 @@ namespace CacheAPIService.Models
      */ 
     public class DocumentRepository: IDocumentRepository
     {
-        //Dictionary good because only retrieving one at a time and a unique identifier is used
         private static Dictionary<int, String> documents = new Dictionary<int, String>();
         private static readonly Timer timer = new Timer(OnTimerElapsed);
         private static Dictionary<int, System.DateTime> deleteSchedule = new Dictionary<int, System.DateTime>();
+        //Unifying documents & deleteSchedule into a single dictionary may be preferable
 
         /**
          * Constructor for DocumentRepository
@@ -43,15 +43,10 @@ namespace CacheAPIService.Models
          */
         private static void OnTimerElapsed(object state)
         {
-            /*Can't modify a collection while its being enumerated in a foreach loop
-             i.e. you can't change the dictionary you're looping over while also looping through it, so make a list of dictionary,
-             loop through the list which can change the dictionary itself*/
-            System.Diagnostics.Debug.WriteLine(DateTime.Now);
             foreach (KeyValuePair<int, DateTime> scheduledDeletion in deleteSchedule.ToArray())
             {
                 if (deleteSchedule[scheduledDeletion.Key] <= DateTime.Now)
                 {
-                    System.Diagnostics.Debug.WriteLine("DELETED");
                     documents.Remove(scheduledDeletion.Key);
                     deleteSchedule.Remove(scheduledDeletion.Key);
                 }
@@ -95,7 +90,7 @@ namespace CacheAPIService.Models
          *  Document item
          *      - Copy of Document stored in cache
          */
-        public Document Get(int id)
+        public Document RetrieveDocument(int id)
         {
             String message = "";
             Document item = new Document();
@@ -122,7 +117,7 @@ namespace CacheAPIService.Models
          *  Document item
          *      - the Document added to cache's document store.
          */
-        public Document Add(Document item)
+        public Document AddDocument(Document item)
         {
             try
             {
@@ -130,27 +125,6 @@ namespace CacheAPIService.Models
             } catch (ArgumentException)
             {
                 item = null;
-            }
-            return item;
-        }
-
-        /**
-         * Delete a Document from the store of documents. Throws ArgumentException if the provided Document was not able
-         * to be deleted.
-         * 
-         * Args:
-         *  Document item
-         *      The item wanted to be removed
-         * 
-         * Returns:
-         *  Document item
-         *      The removed item
-         */
-        private Document Remove(Document item)
-        {
-            if (!(documents.Remove(item.ID)))
-            {
-                throw new ArgumentException("Document provided in argument was not able to be removed");
             }
             return item;
         }

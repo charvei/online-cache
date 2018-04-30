@@ -11,8 +11,8 @@ namespace CacheAPIService.Models
      */
     public interface IDocumentRepository
     {
-        Document Get(int id);
-        Document Add(Document item);
+        Document RetrieveDocument(int id);
+        Document AddDocument(Document item);
         int ScheduleDeletionTime(int Id, int TimeToLive);
         void ClearCache();
     }
